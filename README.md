@@ -4,34 +4,58 @@
 
 ## What is this?
 
-An example of a custom Kubernetes controller that's only purpose is to watch for the creation, updating, or deletion of all custom resource of type `MyResource` (in the all namespaces). This was created as an exercise to understand how Kubernetes controllers work and interact with the cluster and resources.
+An example of a custom Kubernetes controller that's only purpose is to watch for the creation, updating, or deletion of all custom resource of type `Network` (in the all namespaces). This was created as an exercise to understand how Kubernetes controllers work and interact with the cluster and resources.
 
 ## Running
 
+Clone repo:
+
 ```
-$ git clone https://github.com/trstringer/k8s-controller-custom-resource
+$ git clone https://github.com/YTGhost/k8s-controller-custom-resource
 $ cd k8s-controller-custom-resource
-$ go run *.go
 ```
 
-## Inspecting resources in the handler
-
-You are welcome to dump the resources themselves in handler but logging would be extremely verbose (and not interactive). I recommend you use a debugger...
+Prepare build environment:
 
 ```
-$ dlv debug
-(dlv) b main.ObjectCreated
-(dlv) c
+go mod vendor
 ```
 
-You can then trigger an event by creating a deployment of nginx...
+Build and run:
 
 ```
-$ kubectl apply -f example/example-myresource.yaml
+go build -o samplecrd-controller .
+./samplecrd-controller -kubeconfig=$HOME/.kube/config -alsologtostderr=true
 ```
 
-The breakpoint should be hit and you can analyze in the debugger the object...
+## Usage
+
+You should create the CRD of Network first:
 
 ```
-(dlv) p obj
+kubectl apply -f crd/network.yaml
+or
+kubectl apply -f crd/network-1.22+.yaml # for 1.22+
 ```
+
+You can then trigger an event by creating a Network API instance:
+
+```
+kubectl apply -f example/example-network.yaml
+```
+
+CURD the Network API instance, and check the logs of controller. 
+
+Enjoy!
+
+## Code generation
+
+You should modify the `hack/update-codegen.sh` file to your needs first.
+
+And then run:
+
+```
+./hack/update-codegen.sh
+```
+
+It will help you to generate the code for the CRD: deepcopy funcs, clientset, listers, informers.
